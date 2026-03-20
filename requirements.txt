@@ -1,0 +1,8 @@
+# CittaVerse Narrative Scorer v0.5
+# No external dependencies required for core functionality
+# All scoring uses Python standard library
+
+# Optional dependencies for extended features:
+# pip install transformers  # LLM-enhanced scoring (future)
+# pip install matplotlib    # Visualization (future)
+# pip install gradio        # Web UI (future)

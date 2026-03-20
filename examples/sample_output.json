@@ -1,0 +1,19 @@
+{
+  "event_richness": 75.0,
+  "temporal_coherence": 80.0,
+  "causal_coherence": 65.0,
+  "emotional_depth": 70.0,
+  "identity_integration": 85.0,
+  "information_density": 85.0,
+  "central_count": 7,
+  "peripheral_count": 4,
+  "central_ratio": 0.636,
+  "total_events": 11,
+  "time_markers_count": 6,
+  "causal_markers_count": 3,
+  "self_references_count": 9,
+  "emotion_words_count": 5,
+  "composite_score": 76.5,
+  "letter_grade": "B",
+  "feedback": "这是一段不错的叙事，有一些亮点可以继续加强。特别突出的是自我认同整合（85 分）。建议加强因果连贯性（65 分）。"
+}
