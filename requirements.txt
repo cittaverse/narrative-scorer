@@ -3,6 +3,11 @@
 # All scoring uses Python standard library
 
 # Optional dependencies for extended features:
-# pip install transformers  # LLM-enhanced scoring (future)
-# pip install matplotlib    # Visualization (future)
-# pip install gradio        # Web UI (future)
+
+# Web UI (required for gradio_ui.py)
+gradio>=4.0.0
+
+# Future enhancements (optional):
+# pip install transformers  # LLM-enhanced scoring
+# pip install matplotlib    # Visualization
+# pip install pytest        # Testing

@@ -49,6 +49,27 @@ print(f"Temporal Coherence: {result.temporal_coherence}")
 # ... etc
 ```
 
+### Web UI (Gradio)
+
+Launch the interactive web interface:
+
+```bash
+# Install Gradio (one-time)
+pip install gradio
+
+# Start the web server
+python src/gradio_ui.py
+```
+
+Then open http://localhost:7860 in your browser.
+
+**Features**:
+- 📝 Text input with example loading
+- 🚀 One-click scoring
+- 📊 Visual score breakdown with letter grades
+- 💬 Natural language feedback in Chinese
+- 📄 JSON output for programmatic use
+
 ### JSON Output
 
 ```json
@@ -160,7 +181,7 @@ Edit `src/scorer.py` to add more markers:
 - [ ] Cantonese support
 - [ ] ASR integration (Whisper/Azure)
 - [ ] Large-scale validation with expert ratings
-- [ ] Web UI (Gradio/Streamlit)
+- [x] Web UI (Gradio) - ✅ Completed v0.5
 
 ## Citation
 
