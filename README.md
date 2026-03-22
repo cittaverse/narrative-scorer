@@ -1,6 +1,13 @@
 # CittaVerse Narrative Scorer v0.5
 
+[![arXiv](https://img.shields.io/badge/arXiv-pending-orange)](https://arxiv.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+
 Automated narrative quality assessment for Chinese autobiographical memories in reminiscence therapy.
+
+> **📄 Paper**: Technical report submitted to arXiv (cs.HC + cs.CL). Citation details will be updated upon acceptance.  
+> **🏥 Clinical Study**: Pilot RCT (N=50) in preparation — screening questionnaire and consent forms ready.
 
 ## Overview
 
