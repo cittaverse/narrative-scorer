@@ -6,19 +6,21 @@
 
 Automated narrative quality assessment for Chinese autobiographical memories in reminiscence therapy.
 
-> **📄 Paper**: Technical report submitted to arXiv (cs.HC + cs.CL). Citation details will be updated upon acceptance.  
-> **🏥 Clinical Study**: Pilot RCT (N=50) in preparation — screening questionnaire and consent forms ready.
+> **📄 Paper**: Technical report v1.1 ready for arXiv submission (cs.HC + cs.CL, 52 BibTeX references, weighted 6-dimension scoring). Submission tarball available in [pipeline repo](https://github.com/cittaverse/pipeline/tree/main/research/arxiv-paper/arxiv-submission).  
+> **🏥 Clinical Study**: Pilot RCT (N=50) in preparation — screening questionnaire v1.1 complete (14 questions, full skip-logic coverage, PIPL-compliant data protection).
 
 ## Overview
 
 This tool scores narrative quality across **six dimensions**:
 
-1. **Event Richness** (事件丰富度) - Internal/external detail count
-2. **Temporal Coherence** (时间连贯性) - Time markers and sequence clarity
-3. **Causal Coherence** (因果连贯性) - Cause-effect reasoning
-4. **Emotional Depth** (情感深度) - Emotion word density
-5. **Identity Integration** (自我认同整合) - Self-reference frequency
-6. **Information Density Distribution** (信息密度分布) - Central vs. peripheral information balance
+1. **Event Richness** (事件丰富度) - Internal/external detail count — weight: 0.15
+2. **Temporal Coherence** (时间连贯性) - Time markers and sequence clarity — weight: 0.15
+3. **Causal Coherence** (因果连贯性) - Cause-effect reasoning — weight: 0.15
+4. **Emotional Depth** (情感深度) - Emotion word density — weight: **0.20**
+5. **Identity Integration** (自我认同整合) - Self-reference frequency — weight: 0.15
+6. **Information Density Distribution** (信息密度分布) - Central vs. peripheral balance — weight: **0.20**
+
+> Emotional Depth and Information Density receive higher weights based on their stronger association with therapeutic outcomes in reminiscence therapy (Westerhof & Bohlmeijer, 2024; Kensinger & Gutchess, 2026).
 
 ## Installation
 
