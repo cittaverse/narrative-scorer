@@ -1,8 +1,10 @@
-# CittaVerse Narrative Scorer v0.5.1
+# CittaVerse Narrative Scorer v0.6.0
 
+[![CI](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml/badge.svg)](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml)
 [![arXiv](https://img.shields.io/badge/arXiv-pending-orange)](https://arxiv.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
+[![Tests](https://img.shields.io/badge/tests-60%20passed-brightgreen)](tests/)
 
 Automated narrative quality assessment for Chinese autobiographical memories in reminiscence therapy.
 
@@ -177,15 +179,15 @@ Edit `src/scorer.py` to add more markers:
 - **Research**: Quantify narrative changes over time
 - **Clinical Practice**: Track therapy progress
 
-## Limitations (v0.5.1)
+## Limitations (v0.6.0)
 
-- Rule-based event extraction (no LLM)
+- Rule-based event extraction (no LLM yet — v0.6 uses topic-transition markers)
 - Simplified Chinese only (no Cantonese support yet)
 - No ASR integration (text input only)
 - Vocabulary lists are not exhaustive
 - Double negation semantics not yet handled (e.g., "不是不开心")
 
-## Roadmap → v0.6
+## Roadmap → v0.7
 
 See **[ROADMAP-v0.6.md](ROADMAP-v0.6.md)** for the full plan. Key highlights:
 
@@ -193,16 +195,19 @@ See **[ROADMAP-v0.6.md](ROADMAP-v0.6.md)** for the full plan. Key highlights:
 |---------|--------|--------|
 | LLM-as-Judge scoring (hybrid rule+LLM) | Q2 2026 | 🔜 Planned |
 | ~~Negation & context awareness~~ | ~~Q2 2026~~ | ✅ **v0.5.1** |
-| LLM-assisted event boundary detection | Q2 2026 | 🔜 Planned |
+| ~~Event boundary detection v2~~ | ~~Q2 2026~~ | ✅ **v0.6.0** |
+| ~~CI/CD (GitHub Actions)~~ | ~~Q2 2026~~ | ✅ **v0.6.0** |
+| ~~Test suite expansion (8 → 50+)~~ | ~~Q2 2026~~ | ✅ **60 tests** |
 | Multi-dialect support (Cantonese, Wu) | Q3 2026 | 🔜 Planned |
 | Human-AI agreement validation (ICC) | Q4 2026 | ⏳ Blocked on RCT |
 | FastAPI production server | Q3 2026 | 🔜 Planned |
-| ~~Test suite expansion (8 → 50+)~~ | ~~Q2 2026~~ | ✅ **46 tests** |
 
 ### Completed
+- [x] Event boundary detection v2 — topic-transition-aware splitting, short-clause merging, enhanced classification — v0.6.0
+- [x] GitHub Actions CI (Python 3.9-3.12 matrix) — v0.6.0
+- [x] Test expansion: 11 → 36 → 46 → 60 test cases — v0.6.0
 - [x] Negation detection (不/没有/未/并不/从不 etc.) — v0.5.1
 - [x] Negation-aware causal & emotion counting — v0.5.1
-- [x] Test expansion: 11 → 36 → 46 test cases — v0.5.1
 - [x] Web UI (Gradio) — v0.5
 - [x] Weighted scoring rationale — v0.5
 - [x] arXiv technical report — v1.1 ready

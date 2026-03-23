@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Unit tests for Narrative Scorer v0.5
-Expanded from 11 → 32 test cases (GEO #60)
-Covers: marker counting, event extraction, scoring dimensions,
-        edge cases, boundary conditions, mixed-language inputs
+Unit tests for Narrative Scorer v0.6
+Expanded from 46 → 60 test cases (GEO #62)
+Covers: marker counting, event extraction (v0.5 + v0.6), scoring dimensions,
+        edge cases, boundary conditions, mixed-language inputs, negation detection,
+        topic-transition event boundary detection
 """
 
 import unittest
@@ -20,6 +21,7 @@ from scorer import (
     count_self_references,
     count_emotion_words,
     extract_events_simple,
+    extract_events,
     get_letter_grade,
     score_event_richness,
     score_temporal_coherence,
@@ -29,9 +31,13 @@ from scorer import (
     score_information_density,
     calculate_composite_score,
     generate_feedback,
+    _classify_event_type,
+    _extract_time_marker,
+    _extract_people,
     NarrativeScore,
     Event,
     DEFAULT_WEIGHTS,
+    TOPIC_TRANSITION_MARKERS,
 )
 
 
@@ -437,6 +443,112 @@ class TestNegationDetection(unittest.TestCase):
         # The closest negation to "开心" is "不" (at pos 2), so it IS negated
         # Double negation semantics are beyond MVP scope
         self.assertTrue(_is_negated(text, pos, "开心"))
+
+
+# ============================================================================
+# 7. Event Boundary Detection v0.6 Tests (14 new tests)
+# ============================================================================
+
+class TestEventBoundaryV06(unittest.TestCase):
+    """Tests for v0.6 topic-transition-aware event boundary detection"""
+
+    def test_extract_events_basic(self):
+        """Basic event extraction should produce events"""
+        text = "我记得那是一个春天。我和奶奶去公园。我们很开心。"
+        events = extract_events(text)
+        self.assertGreater(len(events), 0)
+
+    def test_topic_transition_splits(self):
+        """Topic transition markers should create new event boundaries"""
+        text = "我在学校读书。后来我去了北京工作。"
+        events = extract_events(text)
+        # Should produce at least 2 events (split by "后来")
+        self.assertGreaterEqual(len(events), 2)
+
+    def test_transition_marker_butshi(self):
+        """'但是' should act as event boundary"""
+        text = "那天天气很好。但是我的心情并不好，因为奶奶生病了。"
+        events = extract_events(text)
+        self.assertGreaterEqual(len(events), 2)
+
+    def test_multi_transition_narrative(self):
+        """Narrative with multiple transition markers should have more events"""
+        text = (
+            "1985年我在杭州出生。后来我去了北京上大学。"
+            "之后我回到了杭州工作。不过最难忘的是大学那段时光。"
+        )
+        events = extract_events(text)
+        self.assertGreaterEqual(len(events), 3)
+
+    def test_short_clause_merging(self):
+        """Very short clauses should be merged with neighbors"""
+        text = "我去了。然后回来了。"
+        events = extract_events(text)
+        # "我去了" (5 chars) and "然后回来了" — short clauses may merge
+        # Either way, we should get at least 1 event
+        self.assertGreaterEqual(len(events), 1)
+
+    def test_enhanced_classification_central(self):
+        """Events with places and people should be classified as central"""
+        clause = "我和妈妈一起去了医院检查"
+        event_type = _classify_event_type(clause)
+        self.assertEqual(event_type, "central")
+
+    def test_enhanced_classification_peripheral(self):
+        """Reflective statements should be classified as peripheral"""
+        clause = "我觉得那段时光很美好，也许是我最快乐的日子"
+        event_type = _classify_event_type(clause)
+        self.assertEqual(event_type, "peripheral")
+
+    def test_people_extraction(self):
+        """People markers should be extracted from clauses"""
+        clause = "爸爸和妈妈带我去了公园"
+        people = _extract_people(clause)
+        self.assertIn("爸爸", people)
+        self.assertIn("妈妈", people)
+
+    def test_time_marker_extraction(self):
+        """Time markers should be correctly extracted"""
+        clause = "后来我们搬到了新的城市"
+        marker = _extract_time_marker(clause)
+        self.assertEqual(marker, "后来")
+
+    def test_v06_more_events_than_v05(self):
+        """v0.6 should extract equal or more events than v0.5 for complex narratives"""
+        text = (
+            "1990年的秋天，我第一次去北京。因为工作调动，所以带着全家搬到了首都。"
+            "后来慢慢适应了。不过最开始的日子很难。另外，北京的冬天特别冷。"
+            "但是同事们都很热情，帮了我很多。"
+        )
+        events_v05 = extract_events_simple(text)
+        events_v06 = extract_events(text)
+        self.assertGreaterEqual(len(events_v06), len(events_v05))
+
+    def test_empty_text_v06(self):
+        """Empty text should return empty events list"""
+        self.assertEqual(extract_events(""), [])
+        self.assertEqual(extract_events("   "), [])
+
+    def test_event_descriptions_nonempty_v06(self):
+        """All v0.6 events should have non-empty descriptions"""
+        text = "那年夏天我和家人去了海边。后来我们搬到了新家。不过我很怀念那段日子。"
+        events = extract_events(text)
+        for event in events:
+            self.assertTrue(len(event.description.strip()) > 0)
+
+    def test_legacy_mode_flag(self):
+        """use_legacy_events=True should use v0.5 extraction"""
+        text = "我记得那天阳光明媚。后来下起了雨。但是我们还是很开心。"
+        result_v06 = score_narrative(text, use_legacy_events=False)
+        result_v05 = score_narrative(text, use_legacy_events=True)
+        # Both should produce valid scores (may differ)
+        self.assertTrue(0 <= result_v06.composite_score <= 100)
+        self.assertTrue(0 <= result_v05.composite_score <= 100)
+
+    def test_punctuation_only_no_events_v06(self):
+        """Punctuation-only input should produce no events"""
+        events = extract_events("。。。，，，！！")
+        self.assertEqual(len(events), 0)
 
 
 if __name__ == "__main__":

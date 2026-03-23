@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CittaVerse Narrative Scorer v0.5.1
+CittaVerse Narrative Scorer v0.6.0
 Automated narrative quality assessment for Chinese autobiographical memories
 
 Six dimensions:
@@ -10,6 +10,13 @@ Six dimensions:
 4. Emotional Depth (情感深度)
 5. Identity Integration (自我认同整合)
 6. Information Density Distribution (中心/外围信息比)
+
+v0.6.0 Changes:
+- Event Boundary Detection v2: topic-transition-aware splitting
+  - 24 transition markers (后来/另外/说到/再说/换个话题 etc.)
+  - Short-clause merging (consecutive clauses <15 chars merged into same event)
+  - Enhanced central/peripheral classification (place names, people, specifics)
+- Backward-compatible: extract_events_simple() still available as legacy
 
 v0.5.1 Changes:
 - Added negation detection (不/没有/未/非/并不/从不 etc.)
@@ -130,6 +137,46 @@ NEGATION_EXCEPTIONS = [
 # Maximum character distance between negation prefix and target word
 NEGATION_WINDOW = 4
 
+# ============================================================================
+# Topic Transition Markers (v0.6 — Event Boundary Detection)
+# ============================================================================
+
+# These markers signal the start of a new event or topic shift
+# Used for smarter event boundary detection beyond punctuation splitting
+TOPIC_TRANSITION_MARKERS = [
+    # Temporal transitions (also serve as topic shifts)
+    "后来", "之后", "接下来", "从那以后", "过了一段时间",
+    # Explicit topic shifts
+    "另外", "说到这个", "说起来", "再说", "换个话题",
+    "还有一件事", "除此之外", "不过",
+    # Scene/location changes
+    "到了那里", "回到家", "到了学校",
+    # Narrative structure markers
+    "最重要的是", "印象最深的是", "最难忘的是",
+    # Contrastive transitions (often signal new event)
+    "但是", "然而", "可是", "不过",
+]
+
+# Minimum clause length for standalone event (chars)
+MIN_EVENT_CLAUSE_LENGTH = 5
+# Maximum clause length to be eligible for merging with neighbors
+MERGE_THRESHOLD_LENGTH = 8
+
+# Place-related markers for enhanced classification
+PLACE_MARKERS = [
+    "家", "学校", "医院", "公园", "商店", "超市", "车站", "机场",
+    "饭店", "餐厅", "办公室", "图书馆", "教室", "操场", "广场",
+    "村", "镇", "县", "市", "省", "北京", "上海", "杭州",
+    "河边", "山上", "海边", "田里", "路上"
+]
+
+# People-related markers for enhanced classification
+PEOPLE_MARKERS = [
+    "爸爸", "妈妈", "父亲", "母亲", "爷爷", "奶奶", "外公", "外婆",
+    "哥哥", "姐姐", "弟弟", "妹妹", "老师", "同学", "朋友", "邻居",
+    "丈夫", "妻子", "孩子", "儿子", "女儿", "老伴"
+]
+
 
 # ============================================================================
 # Negation Detection (v0.6)
@@ -235,8 +282,9 @@ def count_emotion_words(text: str) -> int:
 
 def extract_events_simple(text: str) -> List[Event]:
     """
-    Simple event extraction (rule-based for MVP)
-    Split by sentence boundaries and classify as central/peripheral
+    Simple event extraction (rule-based for MVP) — LEGACY v0.5
+    Split by sentence boundaries and classify as central/peripheral.
+    Kept for backward compatibility. Use extract_events() for v0.6+.
     """
     events = []
     
@@ -270,6 +318,190 @@ def extract_events_simple(text: str) -> List[Event]:
             description=sentence,
             event_type=event_type,
             time_marker=time_marker
+        ))
+    
+    return events
+
+
+def _classify_event_type(clause: str) -> str:
+    """
+    Enhanced event classification (v0.6).
+    
+    Central events contain specific, verifiable details:
+    - Numbers, dates, quantities
+    - Named places
+    - Named people/relationships
+    - Concrete actions with objects
+    
+    Peripheral events are reflections, opinions, general statements.
+    """
+    specifics_score = 0
+    
+    # Check for numeric specifics
+    if re.search(r'\d+|[一二三四五六七八九十百千万]', clause):
+        specifics_score += 2
+    
+    # Check for place markers
+    if any(place in clause for place in PLACE_MARKERS):
+        specifics_score += 2
+    
+    # Check for people markers
+    if any(person in clause for person in PEOPLE_MARKERS):
+        specifics_score += 1
+    
+    # Check for concrete action verbs (indicating specific events)
+    action_verbs = ["去了", "来了", "做了", "买了", "吃了", "看了", "说了",
+                    "走了", "跑了", "拿了", "给了", "送了", "搬了", "带了"]
+    if any(verb in clause for verb in action_verbs):
+        specifics_score += 1
+    
+    # Check for reflection/opinion markers (indicates peripheral)
+    reflection_markers = ["觉得", "认为", "想", "感觉", "可能", "也许",
+                         "大概", "好像", "似乎", "总之", "总的来说",
+                         "回想起来", "现在看来", "我想"]
+    is_reflection = any(word in clause for word in reflection_markers)
+    
+    if is_reflection:
+        specifics_score -= 2
+    
+    return "central" if specifics_score >= 1 else "peripheral"
+
+
+def _extract_time_marker(clause: str) -> Optional[str]:
+    """Extract the first time marker found in a clause."""
+    for marker in TIME_MARKERS:
+        if marker in clause:
+            return marker
+    return None
+
+
+def _extract_people(clause: str) -> List[str]:
+    """Extract people/relationship markers from a clause."""
+    found = []
+    for person in PEOPLE_MARKERS:
+        if person in clause:
+            found.append(person)
+    return found
+
+
+def extract_events(text: str) -> List[Event]:
+    """
+    Event extraction v0.6 — Topic-transition-aware boundary detection.
+    
+    Algorithm:
+    1. Split by sentence-ending punctuation (。！？!?)
+    2. Within each sentence, check for topic transition markers → sub-split
+    3. Merge consecutive short clauses (<MERGE_THRESHOLD_LENGTH chars) 
+       that share the same topic context
+    4. Classify each resulting event as central/peripheral using enhanced heuristics
+    
+    Returns:
+        List of Event objects with improved boundary detection
+    """
+    if not text or not text.strip():
+        return []
+    
+    text = text.strip()
+    
+    # Step 1: Split by sentence-ending punctuation
+    sentences = re.split(r'[。！？!?]', text)
+    sentences = [s.strip() for s in sentences if s.strip()]
+    
+    # Step 2: Sub-split by topic transition markers and comma clauses
+    raw_clauses = []
+    for sentence in sentences:
+        # Check if sentence contains topic transition markers
+        split_positions = []
+        for marker in TOPIC_TRANSITION_MARKERS:
+            pos = 0
+            while True:
+                idx = sentence.find(marker, pos)
+                if idx == -1:
+                    break
+                # Only split if the marker is at or near the start of a clause
+                # (i.e., preceded by comma, start of sentence, or within 3 chars)
+                if idx == 0 or sentence[idx-1] in '，,、 ':
+                    split_positions.append(idx)
+                elif idx <= 3:
+                    split_positions.append(idx)
+                pos = idx + len(marker)
+        
+        if split_positions:
+            # Sort and deduplicate
+            split_positions = sorted(set(split_positions))
+            # Split the sentence at these positions
+            prev = 0
+            for sp in split_positions:
+                chunk = sentence[prev:sp].strip().rstrip('，,、 ')
+                if chunk:
+                    raw_clauses.append(chunk)
+                prev = sp
+            remainder = sentence[prev:].strip()
+            if remainder:
+                raw_clauses.append(remainder)
+        else:
+            # No transition markers — also try comma-splitting for long sentences
+            if len(sentence) > 40 and '，' in sentence:
+                comma_parts = sentence.split('，')
+                # Only sub-split if resulting parts are substantial
+                if all(len(p.strip()) >= 8 for p in comma_parts if p.strip()):
+                    for part in comma_parts:
+                        part = part.strip()
+                        if part:
+                            raw_clauses.append(part)
+                else:
+                    raw_clauses.append(sentence)
+            else:
+                raw_clauses.append(sentence)
+    
+    # Step 3: Merge consecutive short clauses
+    merged_clauses = []
+    buffer = ""
+    for clause in raw_clauses:
+        if len(clause) < MIN_EVENT_CLAUSE_LENGTH and buffer:
+            # Merge with buffer
+            buffer = buffer + "，" + clause
+        elif len(clause) < MIN_EVENT_CLAUSE_LENGTH and not buffer:
+            buffer = clause
+        else:
+            if buffer:
+                # Check if buffer should merge with this clause
+                if len(buffer) < MERGE_THRESHOLD_LENGTH:
+                    buffer = buffer + "，" + clause
+                    merged_clauses.append(buffer)
+                    buffer = ""
+                else:
+                    merged_clauses.append(buffer)
+                    buffer = ""
+                    merged_clauses.append(clause)
+            else:
+                merged_clauses.append(clause)
+    
+    if buffer:
+        if merged_clauses and len(buffer) < MERGE_THRESHOLD_LENGTH:
+            # Merge trailing short buffer with last clause
+            merged_clauses[-1] = merged_clauses[-1] + "，" + buffer
+        else:
+            merged_clauses.append(buffer)
+    
+    # Step 4: Build events with enhanced classification
+    events = []
+    for clause in merged_clauses:
+        if len(clause) < 3:  # Skip trivial fragments
+            continue
+        # Skip clauses that are only punctuation/whitespace
+        if not re.search(r'[\u4e00-\u9fff\w]', clause):
+            continue
+        
+        event_type = _classify_event_type(clause)
+        time_marker = _extract_time_marker(clause)
+        people = _extract_people(clause)
+        
+        events.append(Event(
+            description=clause,
+            event_type=event_type,
+            time_marker=time_marker,
+            people=people
         ))
     
     return events
@@ -449,13 +681,14 @@ def generate_feedback(score: NarrativeScore) -> str:
 # Main Scoring Function
 # ============================================================================
 
-def score_narrative(text: str, weights: Optional[Dict[str, float]] = None) -> NarrativeScore:
+def score_narrative(text: str, weights: Optional[Dict[str, float]] = None, use_legacy_events: bool = False) -> NarrativeScore:
     """
     Score a Chinese narrative text on six dimensions
     
     Args:
         text: Chinese narrative text
         weights: Optional custom weights for dimensions
+        use_legacy_events: If True, use v0.5 extract_events_simple(); default False (v0.6)
     
     Returns:
         NarrativeScore object with all dimensions and composite score
@@ -467,8 +700,11 @@ def score_narrative(text: str, weights: Optional[Dict[str, float]] = None) -> Na
     text = text.strip()
     text_length = len(text)
     
-    # Extract features
-    events = extract_events_simple(text)
+    # Extract features — v0.6 uses new extract_events() by default
+    if use_legacy_events:
+        events = extract_events_simple(text)
+    else:
+        events = extract_events(text)
     time_markers_count = count_time_markers(text)
     causal_markers_count = count_causal_markers(text)
     self_references_count = count_self_references(text)
