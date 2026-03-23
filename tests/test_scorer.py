@@ -364,21 +364,21 @@ class TestNegationDetection(unittest.TestCase):
     
     def test_negated_emotion_detected(self):
         """'不开心' should detect negation on '开心'"""
-        from src.scorer import _is_negated
+        from scorer import _is_negated
         text = "我那天不开心"
         pos = text.index("开心")
         self.assertTrue(_is_negated(text, pos, "开心"))
     
     def test_non_negated_emotion(self):
         """'很开心' should NOT be negated"""
-        from src.scorer import _is_negated
+        from scorer import _is_negated
         text = "我那天很开心"
         pos = text.index("开心")
         self.assertFalse(_is_negated(text, pos, "开心"))
     
     def test_negated_emotion_count_with_negation(self):
         """count_with_negation should separate negated vs non-negated"""
-        from src.scorer import count_with_negation, EMOTION_WORDS
+        from scorer import count_with_negation, EMOTION_WORDS
         text = "我很开心，但她不开心"
         positive, negated = count_with_negation(text, ["开心"])
         self.assertEqual(positive, 1)
@@ -399,7 +399,7 @@ class TestNegationDetection(unittest.TestCase):
     
     def test_multiple_negation_prefixes(self):
         """Various negation prefixes should all be detected"""
-        from src.scorer import _is_negated
+        from scorer import _is_negated
         test_cases = [
             ("并不开心", "开心", True),
             ("从不害怕", "害怕", True),
@@ -429,7 +429,7 @@ class TestNegationDetection(unittest.TestCase):
     
     def test_negation_window_respected(self):
         """Negation too far from word should not count"""
-        from src.scorer import _is_negated
+        from scorer import _is_negated
         # "不" is 10+ chars away from "开心" — beyond window
         text = "不是那样的，我后来很开心"
         pos = text.index("开心")
@@ -437,7 +437,7 @@ class TestNegationDetection(unittest.TestCase):
     
     def test_double_negation(self):
         """'不是不开心' — double negation edge case"""
-        from src.scorer import _is_negated
+        from scorer import _is_negated
         text = "不是不开心"
         pos = text.index("开心")
         # The closest negation to "开心" is "不" (at pos 2), so it IS negated
