@@ -349,5 +349,95 @@ class TestFeedbackAndGrades(unittest.TestCase):
         self.assertTrue(len(result.feedback) > 0)
 
 
+# ============================================================================
+# Negation Detection Tests (v0.5.1)
+# ============================================================================
+
+class TestNegationDetection(unittest.TestCase):
+    """Tests for negation-aware counting (v0.5.1)"""
+    
+    def test_negated_emotion_detected(self):
+        """'不开心' should detect negation on '开心'"""
+        from src.scorer import _is_negated
+        text = "我那天不开心"
+        pos = text.index("开心")
+        self.assertTrue(_is_negated(text, pos, "开心"))
+    
+    def test_non_negated_emotion(self):
+        """'很开心' should NOT be negated"""
+        from src.scorer import _is_negated
+        text = "我那天很开心"
+        pos = text.index("开心")
+        self.assertFalse(_is_negated(text, pos, "开心"))
+    
+    def test_negated_emotion_count_with_negation(self):
+        """count_with_negation should separate negated vs non-negated"""
+        from src.scorer import count_with_negation, EMOTION_WORDS
+        text = "我很开心，但她不开心"
+        positive, negated = count_with_negation(text, ["开心"])
+        self.assertEqual(positive, 1)
+        self.assertEqual(negated, 1)
+    
+    def test_negated_causal_discounted(self):
+        """Negated causal markers should be discounted in count"""
+        text = "没有因为下雨就取消"
+        count = count_causal_markers(text)
+        # "因为" is negated by "没有", should count at 50% → 0 (floor)
+        self.assertEqual(count, 0)
+    
+    def test_non_negated_causal_full_count(self):
+        """Non-negated causal markers should count fully"""
+        text = "因为下雨所以取消了"
+        count = count_causal_markers(text)
+        self.assertEqual(count, 2)  # "因为" + "所以"
+    
+    def test_multiple_negation_prefixes(self):
+        """Various negation prefixes should all be detected"""
+        from src.scorer import _is_negated
+        test_cases = [
+            ("并不开心", "开心", True),
+            ("从不害怕", "害怕", True),
+            ("未感到悲伤", "悲伤", True),
+            ("非常开心", "开心", False),  # "非常" is not negation
+        ]
+        for text, word, expected in test_cases:
+            pos = text.index(word)
+            result = _is_negated(text, pos, word)
+            self.assertEqual(result, expected, 
+                           f"Failed for '{text}': expected negated={expected}, got {result}")
+    
+    def test_emotion_count_includes_negated(self):
+        """Emotion count should include negated emotions (they still show emotional depth)"""
+        text = "我不开心，也不快乐，但很感激"
+        count = count_emotion_words(text)
+        # "开心"(negated) + "快乐"(negated) + "感激"(non-negated) = 3
+        self.assertEqual(count, 3)
+    
+    def test_negation_tracking_in_score(self):
+        """NarrativeScore should track negation counts"""
+        text = "我不开心，因为那天很难过。没有因为别的原因。"
+        result = score_narrative(text)
+        self.assertIsInstance(result.negated_emotion_count, int)
+        self.assertIsInstance(result.negated_causal_count, int)
+        self.assertGreaterEqual(result.negated_emotion_count, 0)
+    
+    def test_negation_window_respected(self):
+        """Negation too far from word should not count"""
+        from src.scorer import _is_negated
+        # "不" is 10+ chars away from "开心" — beyond window
+        text = "不是那样的，我后来很开心"
+        pos = text.index("开心")
+        self.assertFalse(_is_negated(text, pos, "开心"))
+    
+    def test_double_negation(self):
+        """'不是不开心' — double negation edge case"""
+        from src.scorer import _is_negated
+        text = "不是不开心"
+        pos = text.index("开心")
+        # The closest negation to "开心" is "不" (at pos 2), so it IS negated
+        # Double negation semantics are beyond MVP scope
+        self.assertTrue(_is_negated(text, pos, "开心"))
+
+
 if __name__ == "__main__":
     unittest.main()

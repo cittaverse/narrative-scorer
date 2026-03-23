@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CittaVerse Narrative Scorer v0.5
+CittaVerse Narrative Scorer v0.5.1
 Automated narrative quality assessment for Chinese autobiographical memories
 
 Six dimensions:
@@ -10,6 +10,12 @@ Six dimensions:
 4. Emotional Depth (情感深度)
 5. Identity Integration (自我认同整合)
 6. Information Density Distribution (中心/外围信息比)
+
+v0.5.1 Changes:
+- Added negation detection (不/没有/未/非/并不/从不 etc.)
+- Negation-aware causal marker counting (negated causals discounted 50%)
+- Negation-aware emotion counting (negated emotions still count for depth)
+- Negation tracking in output (negated_emotion_count, negated_causal_count)
 
 Author: Hulk 🟢 for CittaVerse
 License: MIT
@@ -54,6 +60,8 @@ class NarrativeScore:
     causal_markers_count: int = 0
     self_references_count: int = 0
     emotion_words_count: int = 0
+    negated_emotion_count: int = 0
+    negated_causal_count: int = 0
     
     # Composite
     composite_score: float = 0.0
@@ -105,6 +113,84 @@ EMOTION_WORDS = [
     "惊讶", "意外", "困惑", "迷茫", "平静", "放松", "复杂", "矛盾"
 ]
 
+# Chinese negation prefixes (v0.6 — negation handling)
+# These modify the meaning of following words within a short window
+NEGATION_PREFIXES = [
+    "不", "没有", "没", "未", "别", "莫", "勿",
+    "不是", "不会", "不能", "不可", "无法", "并不", "并非",
+    "从不", "从未", "毫不", "毫无", "绝不", "绝非"
+]
+
+# Words that START with potential negation chars but are NOT negations
+# Must be checked to avoid false positives
+NEGATION_EXCEPTIONS = [
+    "非常", "非凡", "非但", "非得",  # 非... but not negation
+]
+
+# Maximum character distance between negation prefix and target word
+NEGATION_WINDOW = 4
+
+
+# ============================================================================
+# Negation Detection (v0.6)
+# ============================================================================
+
+def _is_negated(text: str, word_pos: int, word: str) -> bool:
+    """
+    Check if a word at position word_pos is preceded by a negation prefix
+    within NEGATION_WINDOW characters.
+    
+    Example: "不开心" → "开心" at pos 1 is negated by "不" at pos 0
+    Example: "没有因为" → "因为" at pos 2 is negated by "没有" at pos 0
+    Example: "非常开心" → "开心" is NOT negated (非常 is an intensifier)
+    """
+    # Look backwards from the word position
+    search_start = max(0, word_pos - NEGATION_WINDOW - max(len(p) for p in NEGATION_PREFIXES))
+    prefix_text = text[search_start:word_pos]
+    
+    # Check if any negation prefix ends right before or near the word
+    for neg in sorted(NEGATION_PREFIXES, key=len, reverse=True):
+        neg_pos = prefix_text.rfind(neg)
+        if neg_pos >= 0:
+            # Characters between end of negation and start of word
+            gap = len(prefix_text) - neg_pos - len(neg)
+            if gap <= NEGATION_WINDOW:
+                # Check for exception: is this actually part of a non-negation word?
+                abs_neg_pos = search_start + neg_pos
+                is_exception = False
+                for exc in NEGATION_EXCEPTIONS:
+                    if text[abs_neg_pos:abs_neg_pos + len(exc)] == exc:
+                        is_exception = True
+                        break
+                if not is_exception:
+                    return True
+    return False
+
+
+def count_with_negation(text: str, words: list) -> Tuple[int, int]:
+    """
+    Count word occurrences, distinguishing negated from non-negated.
+    
+    Returns:
+        (positive_count, negated_count)
+    """
+    positive = 0
+    negated = 0
+    
+    for word in words:
+        start = 0
+        while True:
+            pos = text.find(word, start)
+            if pos == -1:
+                break
+            if _is_negated(text, pos, word):
+                negated += 1
+            else:
+                positive += 1
+            start = pos + len(word)
+    
+    return positive, negated
+
 
 # ============================================================================
 # Core Scoring Functions
@@ -119,11 +205,15 @@ def count_time_markers(text: str) -> int:
 
 
 def count_causal_markers(text: str) -> int:
-    """Count causal coherence markers in text"""
-    count = 0
-    for marker in CAUSAL_MARKERS:
-        count += text.count(marker)
-    return count
+    """Count causal coherence markers in text (negation-aware)
+    
+    Negated causal markers ("没有因为", "不是因为") are discounted by 50%
+    because they still indicate causal reasoning awareness but with reduced
+    coherence signal.
+    """
+    positive, negated = count_with_negation(text, CAUSAL_MARKERS)
+    # Negated causal markers count at 50% (rounded down)
+    return positive + (negated // 2)
 
 
 def count_self_references(text: str) -> int:
@@ -135,11 +225,12 @@ def count_self_references(text: str) -> int:
 
 
 def count_emotion_words(text: str) -> int:
-    """Count emotion words in text"""
-    count = 0
-    for word in EMOTION_WORDS:
-        count += text.count(word)
-    return count
+    """Count emotion words in text (negation-aware: negated emotions still count as emotional depth)"""
+    # Negated emotions ("不开心") still indicate emotional depth —
+    # the speaker is referencing emotional states even if negated.
+    # So we count both positive and negated occurrences.
+    positive, negated = count_with_negation(text, EMOTION_WORDS)
+    return positive + negated
 
 
 def extract_events_simple(text: str) -> List[Event]:
@@ -383,6 +474,10 @@ def score_narrative(text: str, weights: Optional[Dict[str, float]] = None) -> Na
     self_references_count = count_self_references(text)
     emotion_words_count = count_emotion_words(text)
     
+    # Track negation details for transparency
+    _, negated_emotion_count = count_with_negation(text, EMOTION_WORDS)
+    _, negated_causal_count = count_with_negation(text, CAUSAL_MARKERS)
+    
     # Count central/peripheral
     central_count = sum(1 for e in events if e.event_type == "central")
     peripheral_count = len(events) - central_count
@@ -417,6 +512,8 @@ def score_narrative(text: str, weights: Optional[Dict[str, float]] = None) -> Na
         causal_markers_count=causal_markers_count,
         self_references_count=self_references_count,
         emotion_words_count=emotion_words_count,
+        negated_emotion_count=negated_emotion_count,
+        negated_causal_count=negated_causal_count,
         composite_score=composite,
         letter_grade=get_letter_grade(composite),
         feedback=generate_feedback(NarrativeScore(
