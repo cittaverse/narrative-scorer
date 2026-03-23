@@ -184,13 +184,24 @@ Edit `src/scorer.py` to add more markers:
 - No ASR integration (text input only)
 - Vocabulary lists are not exhaustive
 
-## Future Work
+## Roadmap → v0.6
 
-- [ ] LLM-enhanced event extraction
-- [ ] Cantonese support
-- [ ] ASR integration (Whisper/Azure)
-- [ ] Large-scale validation with expert ratings
-- [x] Web UI (Gradio) - ✅ Completed v0.5
+See **[ROADMAP-v0.6.md](ROADMAP-v0.6.md)** for the full plan. Key highlights:
+
+| Feature | Target | Status |
+|---------|--------|--------|
+| LLM-as-Judge scoring (hybrid rule+LLM) | Q2 2026 | 🔜 Planned |
+| Negation & context awareness | Q2 2026 | 🔜 Planned |
+| LLM-assisted event boundary detection | Q2 2026 | 🔜 Planned |
+| Multi-dialect support (Cantonese, Wu) | Q3 2026 | 🔜 Planned |
+| Human-AI agreement validation (ICC) | Q4 2026 | ⏳ Blocked on RCT |
+| FastAPI production server | Q3 2026 | 🔜 Planned |
+| Test suite expansion (8 → 50+) | Q2 2026 | 🔜 Planned |
+
+### Completed
+- [x] Web UI (Gradio) — v0.5
+- [x] Weighted scoring rationale — v0.5
+- [x] arXiv technical report — v1.1 ready
 
 ## Citation
 
