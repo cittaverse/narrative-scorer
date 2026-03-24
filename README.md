@@ -172,6 +172,20 @@ Edit `src/scorer.py` to add more markers:
 - `SELF_MARKERS`: Self-reference words
 - `EMOTION_WORDS`: Emotion vocabulary
 
+## Integrations
+
+- **[nlg-metricverse](https://github.com/disi-unibo-nlp/nlg-metricverse)**: Available as a plug-in metric — [PR #11](https://github.com/disi-unibo-nlp/nlg-metricverse/pull/11)
+- **[awesome-dementia-detection](https://github.com/billzyx/awesome-dementia-detection)**: Listed as a narrative evaluation tool ✅ Merged
+
+## Community Recognition
+
+| List | Stars | Status |
+|------|-------|--------|
+| [awesome-dementia-detection](https://github.com/billzyx/awesome-dementia-detection) | 42+ | ✅ **Merged** |
+| [Awesome-LLM-Eval](https://github.com/onejune2018/Awesome-LLM-Eval) | 548+ | ⏳ PR #23 Open |
+| [awesome-ai-eval](https://github.com/Vvkmnn/awesome-ai-eval) | 69+ | ⏳ PR #6 Open |
+| [nlg-metricverse](https://github.com/disi-unibo-nlp/nlg-metricverse) | 94+ | ⏳ PR #11 Open |
+
 ## Applications
 
 - **Reminiscence Therapy**: Assess narrative quality in older adults
@@ -203,6 +217,8 @@ See **[ROADMAP-v0.6.md](ROADMAP-v0.6.md)** for the full plan. Key highlights:
 | FastAPI production server | Q3 2026 | 🔜 Planned |
 
 ### Completed
+- [x] nlg-metricverse plugin integration — PR #11 submitted — v0.6.0
+- [x] First external list merge: awesome-dementia-detection — v0.6.0
 - [x] Event boundary detection v2 — topic-transition-aware splitting, short-clause merging, enhanced classification — v0.6.0
 - [x] GitHub Actions CI (Python 3.9-3.12 matrix) — v0.6.0
 - [x] Test expansion: 11 → 36 → 46 → 60 test cases — v0.6.0
