@@ -164,7 +164,8 @@ EMOTION_WORDS = [
     # Neutral/Complex — Social
     "尴尬", "羞愧", "害羞", "不好意思", "难为情",
     # Dialect/Colloquial (common in elderly narratives)
-    "欢喜", "乐呵", "舒坦", "憋屈", "闹心", "膈应"
+    "欢喜", "乐呵", "舒坦", "憋屈", "闹心", "膈应",
+    "急", "着急", "心急", "焦急"  # Wu/regional variants for anxiety/urgency
 ]
 
 # Chinese negation prefixes (v0.6 — negation handling)
