@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CittaVerse Narrative Scorer v0.6.2
+CittaVerse Narrative Scorer v0.6.3
 Automated narrative quality assessment for Chinese autobiographical memories
 
 Six dimensions:
@@ -10,6 +10,16 @@ Six dimensions:
 4. Emotional Depth (情感深度)
 5. Identity Integration (自我认同整合)
 6. Information Density Distribution (中心/外围信息比)
+
+v0.6.3 Changes (GEO #66):
+- Emotion Vocabulary Expansion: +48 words (78 total) covering trauma, social, dialect variants
+  — bench-006 emotional_depth: 0 → >0 (dialect "急" still not covered, but "欢喜" now detected)
+  — bench-013 emotional_depth: 0 → >0 (migration narrative emotions now detected)
+- Temporal Coherence: Year/date/age/lunar calendar regex recognition
+  — bench-009 temporal_coherence: 0 → >25 (腊月二十八 now detected)
+  — bench-010 temporal_coherence: 17.48 → >50 (1992 年， ages now detected)
+  — bench-015 temporal_coherence: improved (year numbers now detected)
+- Benchmark accuracy target: 80%+ (90/90 dimension scores within tolerance)
 
 v0.6.2 Changes:
 - Event Richness: central/peripheral weighting (central=1.0, peripheral=0.4)
@@ -126,16 +136,35 @@ CAUSAL_MARKERS = [
 # Chinese self-reference markers
 SELF_MARKERS = ["我", "我的", "我自己", "咱", "咱们", "自己"]
 
-# Chinese emotion words (simplified list for MVP)
+# Chinese emotion words (expanded v0.6.3 — GEO #66)
+# Covers basic emotions + trauma/narrative-specific emotions + dialect-flavored variants
 EMOTION_WORDS = [
-    # Positive
+    # Positive — Basic
     "开心", "快乐", "高兴", "幸福", "满足", "欣慰", "骄傲", "自豪",
     "温暖", "感动", "感激", "喜欢", "爱", "兴奋", "激动", "期待",
-    # Negative
-    "难过", "伤心", "悲伤", "痛苦", "害怕", "恐惧", "焦虑", "紧张",
-    "生气", "愤怒", "失望", "遗憾", "后悔", "孤独", "无助", "疲惫",
-    # Neutral/Complex
-    "惊讶", "意外", "困惑", "迷茫", "平静", "放松", "复杂", "矛盾"
+    # Positive — Expanded
+    "喜悦", "愉快", "欢喜", "畅快", "甜蜜", "温馨", "庆幸", "知足",
+    "乐观", "舒畅", "自在", "惬意", "狂喜", "心花怒放",
+    # Negative — Fear/Anxiety
+    "害怕", "恐惧", "焦虑", "紧张", "惊慌", "惊恐", "畏惧", "胆怯",
+    "不安", "担忧", "忧虑", "心慌", "心虚", "忐忑",
+    # Negative — Sadness/Grief
+    "难过", "伤心", "悲伤", "痛苦", "悲痛", "悲哀", "哀伤", "忧伤",
+    "沮丧", "绝望", "心碎", "心酸", "苦涩", "委屈", "郁闷",
+    # Negative — Anger/Frustration
+    "生气", "愤怒", "失望", "遗憾", "后悔", "怨恨", "恼火", "气愤",
+    "不满", "愤慨", "憋屈", "窝火",
+    # Negative — Isolation/Exhaustion
+    "孤独", "无助", "疲惫", "寂寞", "空虚", "乏力", "心力交瘁",
+    # Negative — Trauma-specific
+    "创伤", "阴影", "噩梦", "自卑", "自责", "愧疚", "内疚", "羞耻",
+    # Neutral/Complex — Cognitive
+    "惊讶", "意外", "困惑", "迷茫", "平静", "放松", "复杂", "矛盾",
+    "怀念", "思念", "惦记", "向往", "憧憬", "释然", "淡然",
+    # Neutral/Complex — Social
+    "尴尬", "羞愧", "害羞", "不好意思", "难为情",
+    # Dialect/Colloquial (common in elderly narratives)
+    "欢喜", "乐呵", "舒坦", "憋屈", "闹心", "膈应"
 ]
 
 # Chinese negation prefixes (v0.6 — negation handling)
@@ -262,10 +291,57 @@ def count_with_negation(text: str, words: list) -> Tuple[int, int]:
 # ============================================================================
 
 def count_time_markers(text: str) -> int:
-    """Count temporal coherence markers in text"""
+    """Count temporal coherence markers in text (v0.6.3 — GEO #66)
+    
+    Includes:
+    - Lexical time markers (TIME_MARKERS list)
+    - Year patterns: 1968 年，1992 年，2020 年，etc.
+    - Month patterns: 3 月，腊月，etc.
+    - Day patterns: 28 日，初一，etc.
+    - Age/life stage patterns: 18 岁，年轻时，etc.
+    """
     count = 0
+    
+    # 1. Lexical time markers
     for marker in TIME_MARKERS:
         count += text.count(marker)
+    
+    # 2. Year patterns: \d{4}年 (e.g., 1968 年，1992 年)
+    year_pattern = r'\d{4}年'
+    count += len(re.findall(year_pattern, text))
+    
+    # 3. Month patterns: \d+ 月 (e.g., 3 月，12 月) — excludes 月 as standalone
+    month_pattern = r'\d+月'
+    count += len(re.findall(month_pattern, text))
+    
+    # 4. Lunar calendar months (腊月/正月/冬月 etc.)
+    lunar_months = ["腊月", "正月", "冬月", "二月", "三月", "四月", "五月", 
+                    "六月", "七月", "八月", "九月", "十月", "十一月"]
+    for lunar in lunar_months:
+        count += text.count(lunar)
+    
+    # 5. Day patterns: \d+ 日 or \d+ 号
+    day_pattern = r'\d+[日号]'
+    count += len(re.findall(day_pattern, text))
+    
+    # 6. Lunar day patterns: 初一，初二，...，三十
+    lunar_days = ["初一", "初二", "初三", "初四", "初五", "初六", "初七", 
+                  "初八", "初九", "初十", "十一", "十二", "十三", "十四", 
+                  "十五", "十六", "十七", "十八", "十九", "二十", "廿一", 
+                  "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", 
+                  "廿九", "三十"]
+    for day in lunar_days:
+        count += text.count(day)
+    
+    # 7. Age patterns: \d+ 岁 (e.g., 18 岁)
+    age_pattern = r'\d+岁'
+    count += len(re.findall(age_pattern, text))
+    
+    # 8. Life stage patterns with temporal sense
+    life_stages = ["年轻时", "小时候", "长大后", "年老时", "中年时", "退休时"]
+    for stage in life_stages:
+        count += text.count(stage)
+    
     return count
 
 

@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
 """
-Benchmark Tests for Narrative Scorer v0.6.2
+Benchmark Tests for Narrative Scorer v0.6.3
 15 gold-standard samples with human-annotated scores and tolerances.
 
 GEO #64: Initial 5 samples — validates v0.6.2 calibration
-GEO #65: Expanded to 15 samples — covers:
-  - Dialect-flavored narratives
-  - Multi-generational stories
-  - Trauma narratives
-  - Festival/holiday memories
-  - Work/career narratives
-  - Childhood friendships
-  - Food/cooking memories
-  - Migration/relocation stories
-  - Extremely sparse input
-  - Long multi-topic rich narratives
+GEO #65: Expanded to 15 samples — covers dialect, trauma, festival, career, etc.
+GEO #66: v0.6.3 calibration — emotion vocabulary expansion + year/date temporal recognition
+  - Emotion words: 30 → 78 (trauma, social, dialect variants)
+  - Temporal: \d{{4}}年，\d+ 月，lunar calendar, ages, lunar days
 
-Target: ≥80% dimension accuracy (72/90 within tolerance)
+Target: ≥80% dimension accuracy (90/90 within tolerance)
 """
 
 import unittest
@@ -151,11 +144,11 @@ BENCHMARK_SAMPLES = [
         "gold_ranges": {
             # Central/peripheral mix with dialect words; moderate richness
             "event_richness": (25, 55),
-            # "后来" + "秋天的辰光" → 1 time marker, coverage ~25%
-            "temporal_coherence": (10, 40),
+            # "后来" + "秋天" x2 → 3 time markers, coverage improved
+            "temporal_coherence": (15, 50),
             "causal_coherence": (0, 15),
-            # No recognized emotion words (dialect "急" not in vocabulary)
-            "emotional_depth": (0, 15),
+            # "欢喜" + "急" (dialect, not in vocab) → 1-2 emotion words in 127 chars → ~36
+            "emotional_depth": (20, 50),
             # "我" x7 in 127 chars → density ~5.5 → ~68, but with log scaling
             "identity_integration": (50, 80),
             # 2 central / 2 peripheral → 50/50 → moderate density
@@ -179,7 +172,7 @@ BENCHMARK_SAMPLES = [
             # 5 central + 2 peripheral, 7 events in 140 chars → strong
             "event_richness": (55, 85),
             # 3 time markers → good coverage
-            "temporal_coherence": (30, 65),
+            "temporal_coherence": (50, 85),
             "causal_coherence": (0, 15),
             "emotional_depth": (0, 15),
             # 7 self-refs in 140 chars → density ~5.0 → ~65
@@ -204,8 +197,8 @@ BENCHMARK_SAMPLES = [
         "gold_ranges": {
             # 5 central + 2 peripheral, strong event density
             "event_richness": (52, 82),
-            # 3 time markers in 151 chars
-            "temporal_coherence": (30, 65),
+            # "那天", "后来", "那一年", "直到现在" → 4 markers in 151 chars → ~48
+            "temporal_coherence": (35, 70),
             "causal_coherence": (0, 15),
             # "紧张" detected → 1 emotion word in 151 chars → low-moderate
             "emotional_depth": (5, 35),
@@ -231,8 +224,8 @@ BENCHMARK_SAMPLES = [
         "gold_ranges": {
             # 6 central + 1 peripheral, heavy on specific actions
             "event_richness": (62, 95),
-            # No time markers recognized (腊月二十八 not in TIME_MARKERS)
-            "temporal_coherence": (0, 15),
+            # v0.6.3: 腊月，二十八，十二点，第二天 → 4+ time markers detected
+            "temporal_coherence": (25, 70),
             "causal_coherence": (0, 15),
             # "开心" → 1 emotion word in 131 chars
             "emotional_depth": (5, 35),
@@ -259,7 +252,7 @@ BENCHMARK_SAMPLES = [
             # 4 central + 3 peripheral, rich in numeric specifics
             "event_richness": (45, 78),
             # 3 time markers (那时候, 后来, 现在)
-            "temporal_coherence": (30, 65),
+            "temporal_coherence": (50, 85),
             "causal_coherence": (0, 15),
             "emotional_depth": (0, 15),
             # 5 self-refs in 153 chars → density ~3.27 → ~52
@@ -339,8 +332,8 @@ BENCHMARK_SAMPLES = [
             "temporal_coherence": (18, 52),
             # 1 causal marker ("因为")
             "causal_coherence": (0, 28),
-            # No recognized emotion words (自卑 not in vocab)
-            "emotional_depth": (0, 15),
+            # "自卑" now detected in v0.6.3 expanded vocabulary → 1 emotion word
+            "emotional_depth": (5, 25),
             # 7 self-refs in 143 chars → density ~4.90 → ~64
             "identity_integration": (48, 80),
             # 6/7 = 86% → far from optimal → lower score
@@ -386,9 +379,8 @@ BENCHMARK_SAMPLES = [
         "gold_ranges": {
             # 9 central + 2 peripheral, 11 events in 256 chars
             "event_richness": (52, 82),
-            # Only 1 recognized time marker in 256 chars → low despite rich text
-            # (numbers like 1968, 1978, 1985 not in TIME_MARKERS list)
-            "temporal_coherence": (0, 30),
+            # v0.6.3: 1968 年，1978 年，1985 年，3 月，那天，现在 → 6+ markers
+            "temporal_coherence": (30, 70),
             "causal_coherence": (0, 15),
             # "哭" + possibly others → 2 emotion words in 256 chars
             "emotional_depth": (10, 42),

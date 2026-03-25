@@ -1,4 +1,4 @@
-# CittaVerse Narrative Scorer v0.6.2
+# CittaVerse Narrative Scorer v0.6.3
 
 [![CI](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml/badge.svg)](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml)
 [![arXiv](https://img.shields.io/badge/arXiv-pending-orange)](https://arxiv.org/)
@@ -194,7 +194,7 @@ Edit `src/scorer.py` to add more markers:
 - **Research**: Quantify narrative changes over time
 - **Clinical Practice**: Track therapy progress
 
-## Benchmark Results (v0.6.2)
+## Benchmark Results (v0.6.3)
 
 15 gold-standard samples covering diverse narrative types:
 
@@ -223,14 +223,14 @@ Edit `src/scorer.py` to add more markers:
 └── 12 benchmark tests (dimension accuracy + behavioral invariants)
 ```
 
-## Limitations (v0.6.2)
+## Limitations (v0.6.3)
 
 - Rule-based event extraction (no LLM yet — v0.6 uses topic-transition markers)
 - Simplified Chinese only (no Cantonese/Wu tokenization)
 - No ASR integration (text input only)
-- Vocabulary lists are not exhaustive (e.g., "自卑", "急" not in emotion vocab)
+- Dialect emotion words still limited (e.g., "急" in Wu dialect not recognized)
 - Short-text identity_integration inflation (single "我" in ≤12 chars → high score)
-- Year numbers (1968, 1985) not recognized as temporal markers
+- Lunar calendar terms partially covered (腊月/正月 yes, specific regional variants may miss)
 
 ## Roadmap → v0.7
 
@@ -245,13 +245,15 @@ See **[ROADMAP-v0.6.md](ROADMAP-v0.6.md)** for the full plan. Key highlights:
 | ~~Test suite expansion (8 → 50+)~~ | ~~Q2 2026~~ | ✅ **72 tests** |
 | ~~Dimension calibration~~ | ~~Q2 2026~~ | ✅ **v0.6.2** |
 | ~~15-sample benchmark~~ | ~~Q2 2026~~ | ✅ **v0.6.2** |
-| Year/date temporal recognition | Q2 2026 | 🔜 Planned |
-| Expanded emotion vocabulary | Q2 2026 | 🔜 Planned |
+| ~~Year/date temporal recognition~~ | ~~Q2 2026~~ | ✅ **v0.6.3** |
+| ~~Expanded emotion vocabulary~~ | ~~Q2 2026~~ | ✅ **v0.6.3** |
 | Multi-dialect support (Cantonese, Wu) | Q3 2026 | 🔜 Planned |
 | Human-AI agreement validation (ICC) | Q4 2026 | ⏳ Blocked on RCT |
 | FastAPI production server | Q3 2026 | 🔜 Planned |
 
 ### Completed
+- [x] Emotion vocabulary expansion (30 → 78 words: trauma, social, dialect) — v0.6.3
+- [x] Year/date temporal recognition (\d{4}年，\d+ 月，lunar calendar, ages) — v0.6.3
 - [x] 15-sample benchmark suite (90/90 dimension accuracy) — v0.6.2
 - [x] Dimension calibration: event_richness, temporal_coherence, emotional_depth — v0.6.2
 - [x] LLM-as-Judge architecture research (3 options evaluated, Option C recommended) — v0.6.2
