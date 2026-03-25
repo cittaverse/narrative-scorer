@@ -1,10 +1,11 @@
-# CittaVerse Narrative Scorer v0.6.0
+# CittaVerse Narrative Scorer v0.6.2
 
 [![CI](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml/badge.svg)](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml)
 [![arXiv](https://img.shields.io/badge/arXiv-pending-orange)](https://arxiv.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-60%20passed-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-72%20passed-brightgreen)](tests/)
+[![Benchmark](https://img.shields.io/badge/benchmark-90%2F90%20✓-blue)](tests/test_benchmark.py)
 
 Automated narrative quality assessment for Chinese autobiographical memories in reminiscence therapy.
 
@@ -123,11 +124,11 @@ python src/scorer.py "$(cat examples/sample_input.txt)"
 
 ### Dimension Scoring
 Each dimension is scored 0-100 based on:
-- **Event Richness**: Events per 100 characters
-- **Temporal Coherence**: Time marker density + coverage
-- **Causal Coherence**: Causal marker density
-- **Emotional Depth**: Emotion word density
-- **Identity Integration**: Self-reference density
+- **Event Richness**: Weighted events per 100 chars (central=1.0, peripheral=0.4) + count bonus + central bonus — *v0.6.2: prevents all-reflective narratives from scoring high*
+- **Temporal Coherence**: Log-scaled marker density + time coverage — *v0.6.2: single-event cap at 25, prevents short-text inflation*
+- **Causal Coherence**: Causal marker density (negation-aware since v0.5.1)
+- **Emotional Depth**: Log-scaled emotion density + count bonus — *v0.6.2: text length floor at 60 chars*
+- **Identity Integration**: Log-scaled self-reference density — *v0.6.1: prevents universal saturation*
 - **Information Density**: Distance from optimal 60/40 central-peripheral ratio
 
 ### Composite Score
@@ -193,13 +194,43 @@ Edit `src/scorer.py` to add more markers:
 - **Research**: Quantify narrative changes over time
 - **Clinical Practice**: Track therapy progress
 
-## Limitations (v0.6.0)
+## Benchmark Results (v0.6.2)
+
+15 gold-standard samples covering diverse narrative types:
+
+| Category | Samples | Coverage |
+|----------|---------|----------|
+| Rich childhood memory | bench-001 | Specific events, temporal flow |
+| Sparse reflective | bench-002, bench-014 | Low-detail, all-peripheral |
+| Emotional family | bench-003 | Causal + emotional markers |
+| Minimal single-sentence | bench-004 | Edge case: 1 event |
+| Multi-scene journey | bench-005 | Geographic progression |
+| Dialect-flavored (方言) | bench-006 | Wu dialect vocabulary |
+| Multi-generational (多代际) | bench-007 | Cross-generation events |
+| Trauma narrative | bench-008 | Physiological + emotional |
+| Festival memory | bench-009 | Routine/habitual events |
+| Work/career | bench-010 | Numeric specifics, time spans |
+| Childhood friendship | bench-011 | Temporal markers, reunion |
+| Food/cooking memory | bench-012 | Process-heavy, low self-ref |
+| Migration story | bench-013 | Causal markers, identity shift |
+| Long multi-topic | bench-015 | 12 sentences, 3 life events |
+
+**Results**: 90/90 dimension checks within gold-annotated ranges (100% accuracy)
+
+```
+72 tests in 0.03s — OK
+├── 60 unit tests (scorer + edge cases + negation + event boundary)
+└── 12 benchmark tests (dimension accuracy + behavioral invariants)
+```
+
+## Limitations (v0.6.2)
 
 - Rule-based event extraction (no LLM yet — v0.6 uses topic-transition markers)
-- Simplified Chinese only (no Cantonese support yet)
+- Simplified Chinese only (no Cantonese/Wu tokenization)
 - No ASR integration (text input only)
-- Vocabulary lists are not exhaustive
-- Double negation semantics not yet handled (e.g., "不是不开心")
+- Vocabulary lists are not exhaustive (e.g., "自卑", "急" not in emotion vocab)
+- Short-text identity_integration inflation (single "我" in ≤12 chars → high score)
+- Year numbers (1968, 1985) not recognized as temporal markers
 
 ## Roadmap → v0.7
 
@@ -207,21 +238,28 @@ See **[ROADMAP-v0.6.md](ROADMAP-v0.6.md)** for the full plan. Key highlights:
 
 | Feature | Target | Status |
 |---------|--------|--------|
-| LLM-as-Judge scoring (hybrid rule+LLM) | Q2 2026 | 🔜 Planned |
+| LLM-as-Judge scoring (hybrid rule+LLM) | Q2 2026 | 🔜 [Architecture designed](../pipeline/docs/llm_as_judge_architecture.md) |
 | ~~Negation & context awareness~~ | ~~Q2 2026~~ | ✅ **v0.5.1** |
 | ~~Event boundary detection v2~~ | ~~Q2 2026~~ | ✅ **v0.6.0** |
 | ~~CI/CD (GitHub Actions)~~ | ~~Q2 2026~~ | ✅ **v0.6.0** |
-| ~~Test suite expansion (8 → 50+)~~ | ~~Q2 2026~~ | ✅ **60 tests** |
+| ~~Test suite expansion (8 → 50+)~~ | ~~Q2 2026~~ | ✅ **72 tests** |
+| ~~Dimension calibration~~ | ~~Q2 2026~~ | ✅ **v0.6.2** |
+| ~~15-sample benchmark~~ | ~~Q2 2026~~ | ✅ **v0.6.2** |
+| Year/date temporal recognition | Q2 2026 | 🔜 Planned |
+| Expanded emotion vocabulary | Q2 2026 | 🔜 Planned |
 | Multi-dialect support (Cantonese, Wu) | Q3 2026 | 🔜 Planned |
 | Human-AI agreement validation (ICC) | Q4 2026 | ⏳ Blocked on RCT |
 | FastAPI production server | Q3 2026 | 🔜 Planned |
 
 ### Completed
+- [x] 15-sample benchmark suite (90/90 dimension accuracy) — v0.6.2
+- [x] Dimension calibration: event_richness, temporal_coherence, emotional_depth — v0.6.2
+- [x] LLM-as-Judge architecture research (3 options evaluated, Option C recommended) — v0.6.2
 - [x] nlg-metricverse plugin integration — PR #11 submitted — v0.6.0
 - [x] First external list merge: awesome-dementia-detection — v0.6.0
 - [x] Event boundary detection v2 — topic-transition-aware splitting, short-clause merging, enhanced classification — v0.6.0
 - [x] GitHub Actions CI (Python 3.9-3.12 matrix) — v0.6.0
-- [x] Test expansion: 11 → 36 → 46 → 60 test cases — v0.6.0
+- [x] Test expansion: 11 → 36 → 46 → 60 → 72 test cases — v0.6.2
 - [x] Negation detection (不/没有/未/并不/从不 etc.) — v0.5.1
 - [x] Negation-aware causal & emotion counting — v0.5.1
 - [x] Web UI (Gradio) — v0.5
