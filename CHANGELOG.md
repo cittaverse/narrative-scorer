@@ -11,6 +11,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Trauma-specific: 创伤，阴影，自卑，自责，愧疚，内疚，羞耻
   - Social emotions: 尴尬，羞愧，害羞，不好意思，难为情
   - Dialect/colloquial: 欢喜，乐呵，舒坦，憋屈，闹心，膈应
+  - Dialect anxiety (GEO #67): 急，着急，心急，焦急 (Wu/regional variants)
   - Expanded basic emotions: +48 words across positive/negative/complex categories
 - **Year/date temporal recognition** in `count_time_markers()`:
   - Year patterns: `\d{4}年` (1968 年，1992 年)
