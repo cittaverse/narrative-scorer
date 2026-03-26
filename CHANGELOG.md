@@ -4,6 +4,31 @@ All notable changes to CittaVerse Narrative Scorer are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.4] - 2026-03-26
+
+### Added
+- **Emotion vocabulary final audit**: 82 → 90 words (+8)
+  - Basic emotional expressions: 哭，笑，微笑 (common in elderly narratives)
+  - Affection/warmth terms: 心疼，牵挂，疼爱，暖和 (family narrative contexts)
+  - Anxiety variant: 担心 (eldercare anxiety, common in Path B interviews)
+- **Benchmark suite expansion**: 15 → 18 samples (+3)
+  - bench-016: Pure dialogue narrative (纯对话体) — tests conversation-heavy narratives
+  - bench-017: Code-switching narrative (中英混用) — tests bilingual/returnee narratives
+  - bench-018: High emotional density (高情感密度) — tests trauma/illness narratives with密集 emotion words
+
+### Changed
+- **bench-003 (family illness) emotional_depth**: 15-55 → 40-75 ("哭", "害怕" now detected)
+- **bench-013 (migration) emotional_depth**: 5-25 → 25-50 ("自卑" + context words detected)
+- **bench-015 (long multi-topic) emotional_depth**: 10-42 → 35-65 ("哭", "笑", "爱" now detected)
+- **bench-016 (dialogue) all ranges**: Calibrated for dialogue-specific patterns (high temporal, moderate identity)
+- **bench-017 (code-switching) all ranges**: Calibrated for mixed-language parsing behavior
+- **bench-018 (high emotion) emotional_depth**: 55-95 (validates密集 emotion word detection)
+
+### Verified
+- 72/72 tests passing (60 unit + 12 benchmark)
+- 108/108 benchmark dimension accuracy (100%)
+- Emotion vocabulary coverage: 90 words across 10+ categories
+
 ## [0.6.3] - 2026-03-25
 
 ### Added

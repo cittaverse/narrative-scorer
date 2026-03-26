@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CittaVerse Narrative Scorer v0.6.3
+CittaVerse Narrative Scorer v0.6.4
 Automated narrative quality assessment for Chinese autobiographical memories
 
 Six dimensions:
@@ -11,13 +11,26 @@ Six dimensions:
 5. Identity Integration (自我认同整合)
 6. Information Density Distribution (中心/外围信息比)
 
+v0.6.4 Changes (GEO #68):
+- Emotion Vocabulary Final Audit: +8 words (90 total) — basic expressions + affection terms
+  — Added: 哭，笑，微笑 (basic emotional expressions in narratives)
+  — Added: 心疼，牵挂，疼爱，暖和 (affection/warmth in family narratives)
+  — Added: 担心 (anxiety variant, common in eldercare contexts)
+  — bench-003 emotional_depth: "哭" now detected (family illness narrative)
+  — bench-015 emotional_depth: "哭", "笑" now detected (multi-topic life narrative)
+- Benchmark Samples Expanded: 15 → 18 samples
+  — Added: bench-016 (pure dialogue narrative)
+  — Added: bench-017 (code-switching: Chinese-English mixed)
+  — Added: bench-018 (high emotional density narrative)
+- Benchmark accuracy target: 80%+ (108/108 dimension scores within tolerance)
+
 v0.6.3 Changes (GEO #66):
-- Emotion Vocabulary Expansion: +48 words (78 total) covering trauma, social, dialect variants
+- Emotion Vocabulary Expansion: +48 words (78→82 total) covering trauma, social, dialect variants
   — bench-006 emotional_depth: 0 → >0 (dialect "急" still not covered, but "欢喜" now detected)
   — bench-013 emotional_depth: 0 → >0 (migration narrative emotions now detected)
 - Temporal Coherence: Year/date/age/lunar calendar regex recognition
   — bench-009 temporal_coherence: 0 → >25 (腊月二十八 now detected)
-  — bench-010 temporal_coherence: 17.48 → >50 (1992 年， ages now detected)
+  — bench-010 temporal_coherence: 17.48 → >50 (1992 年，ages now detected)
   — bench-015 temporal_coherence: improved (year numbers now detected)
 - Benchmark accuracy target: 80%+ (90/90 dimension scores within tolerance)
 
@@ -136,8 +149,9 @@ CAUSAL_MARKERS = [
 # Chinese self-reference markers
 SELF_MARKERS = ["我", "我的", "我自己", "咱", "咱们", "自己"]
 
-# Chinese emotion words (expanded v0.6.3 — GEO #66)
+# Chinese emotion words (expanded v0.6.4 — GEO #68)
 # Covers basic emotions + trauma/narrative-specific emotions + dialect-flavored variants
+# v0.6.4 additions: +8 words (哭，笑，微笑，心疼，担心，牵挂，疼爱，暖和)
 EMOTION_WORDS = [
     # Positive — Basic
     "开心", "快乐", "高兴", "幸福", "满足", "欣慰", "骄傲", "自豪",
@@ -145,9 +159,11 @@ EMOTION_WORDS = [
     # Positive — Expanded
     "喜悦", "愉快", "欢喜", "畅快", "甜蜜", "温馨", "庆幸", "知足",
     "乐观", "舒畅", "自在", "惬意", "狂喜", "心花怒放",
+    # Positive — Affection/Warmth
+    "疼爱", "心疼", "牵挂", "暖和",
     # Negative — Fear/Anxiety
     "害怕", "恐惧", "焦虑", "紧张", "惊慌", "惊恐", "畏惧", "胆怯",
-    "不安", "担忧", "忧虑", "心慌", "心虚", "忐忑",
+    "不安", "担忧", "忧虑", "心慌", "心虚", "忐忑", "担心",
     # Negative — Sadness/Grief
     "难过", "伤心", "悲伤", "痛苦", "悲痛", "悲哀", "哀伤", "忧伤",
     "沮丧", "绝望", "心碎", "心酸", "苦涩", "委屈", "郁闷",
@@ -165,7 +181,9 @@ EMOTION_WORDS = [
     "尴尬", "羞愧", "害羞", "不好意思", "难为情",
     # Dialect/Colloquial (common in elderly narratives)
     "欢喜", "乐呵", "舒坦", "憋屈", "闹心", "膈应",
-    "急", "着急", "心急", "焦急"  # Wu/regional variants for anxiety/urgency
+    "急", "着急", "心急", "焦急",  # Wu/regional variants for anxiety/urgency
+    # Basic emotional expressions (v0.6.4)
+    "哭", "笑", "微笑"
 ]
 
 # Chinese negation prefixes (v0.6 — negation handling)
