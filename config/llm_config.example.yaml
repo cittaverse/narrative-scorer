@@ -1,0 +1,32 @@
+# LLM Feature Extractor Configuration
+# Version: v0.7.0-alpha
+# 
+# Copy this file to `config/llm_config.yaml` and customize for your environment.
+# Required: DASHSCOPE_API_KEY environment variable (or set api_key below).
+
+# API Configuration
+api_key: null  # Set to your DashScope API key, or use DASHSCOPE_API_KEY env var
+model: qwen-plus  # Recommended: qwen-plus (best cost/performance), qwen-turbo (cheaper), qwen-max (more capable)
+timeout: 5  # API timeout in seconds
+max_retries: 2  # Number of retry attempts on failure
+rate_limit_delay: 0.1  # Delay between API calls (seconds) to avoid rate limiting
+
+# Feature Toggles
+use_emotion_detection: true
+use_event_segmentation: true
+use_causality_detection: true
+
+# Fallback Configuration
+fallback_to_rule_only: true  # If true, falls back to rule-only scoring on LLM failure
+
+# Cost Tracking (DashScope qwen-plus pricing as of 2026-03)
+track_cost: true
+cost_per_1k_input_tokens: 0.0028  # CNY
+cost_per_1k_output_tokens: 0.0028  # CNY
+
+# Caching (optional - for development/testing)
+use_cache: false
+cache_dir: null  # e.g., ".cache/llm_responses"
+
+# Logging
+log_level: INFO  # DEBUG, INFO, WARNING, ERROR
