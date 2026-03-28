@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cittaverse-narrative-scorer"
+version = "0.7.0"
+description = "Automated narrative quality assessment for Chinese autobiographical memories — hybrid rule-based + LLM-enhanced scoring"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "CittaVerse Team", email = "cittaverse@gmail.com"}
+]
+maintainers = [
+    {name = "CittaVerse Team", email = "cittaverse@gmail.com"}
+]
+keywords = [
+    "narrative-analysis",
+    "chinese-nlp",
+    "reminiscence-therapy",
+    "cognitive-health",
+    "elderly-care",
+    "llm-enhanced",
+    "mental-health",
+    "digital-therapeutics"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Text Processing :: Linguistic"
+]
+requires-python = ">=3.9"
+dependencies = [
+    "dashscope>=1.14.0"
+]
+
+[project.optional-dependencies]
+ui = [
+    "gradio>=4.0.0"
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0"
+]
+all = [
+    "cittaverse-narrative-scorer[ui,dev]"
+]
+
+[project.urls]
+Homepage = "https://github.com/cittaverse/narrative-scorer"
+Documentation = "https://github.com/cittaverse/narrative-scorer#readme"
+Repository = "https://github.com/cittaverse/narrative-scorer.git"
+Issues = "https://github.com/cittaverse/narrative-scorer/issues"
+Changelog = "https://github.com/cittaverse/narrative-scorer/blob/main/CHANGELOG.md"
+
+[project.scripts]
+narrative-scorer = "src.scorer:cli_main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-data]
+src = ["llm_prompts/**/*.txt"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
