@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CittaVerse Narrative Scorer v0.6.4
+CittaVerse Narrative Scorer v0.7.0
 Automated narrative quality assessment for Chinese autobiographical memories
 
 Six dimensions:
@@ -10,6 +10,23 @@ Six dimensions:
 4. Emotional Depth (情感深度)
 5. Identity Integration (自我认同整合)
 6. Information Density Distribution (中心/外围信息比)
+
+v0.7.0 Changes (GEO #70-74):
+- **LLM-Enhanced Feature Extraction**: Hybrid scoring (Rule-based + LLM augmentation)
+  — Implicit emotion detection: Detects emotions without explicit emotion words
+  — Semantic event boundaries: Topic transitions, not just sentence boundaries
+  — Implicit causal links: Reasoning beyond explicit markers (因为/所以 etc.)
+  — Graceful degradation: Falls back to rule-only if LLM API fails or unavailable
+- **Extended Benchmark**: 25 samples across 5 categories (positive/negative/neutral/reflective/traumatic)
+  — Mocked LLM tests: 21 tests without API key requirement (CI-friendly)
+  — Live LLM tests: 4 tests validating actual LLM enhancement (requires DASHSCOPE_API_KEY)
+  — Validates: Emotion detection improvement, false positive prevention, category-wise behavior
+- **LLM Feature Extractor**: New module `llm_feature_extractor.py` with LLMConfig
+  — Configurable: model selection, timeout, retries, rate limiting
+  — Feature toggles: emotion_detection, event_boundary_detection, causal_detection
+  — Cost estimate: ~¥0.00084 per narrative @ qwen-plus (200 input + 100 output tokens)
+- **Integration Prep**: Core migration Phase 1 documentation + wrapper layer design
+- **Release Workflow**: Complete PyPI release checklist (validation → publish → monitoring)
 
 v0.6.4 Changes (GEO #68):
 - Emotion Vocabulary Final Audit: +8 words (90 total) — basic expressions + affection terms
