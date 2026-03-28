@@ -266,6 +266,32 @@ See `tests/test_benchmark.py` for the original 15-sample benchmark (90/90 dimens
 - No ASR integration (text input only)
 - Dialect emotion words still limited (e.g., "急" in Wu dialect not recognized)
 
+## Troubleshooting
+
+### LLM API Returns 401 Authentication Error
+
+**Symptom**: `LLM API returned error (status: 401)` in logs
+
+**Cause**: DASHSCOPE_API_KEY is invalid, expired, or revoked
+
+**Resolution**:
+1. Visit https://dashscope.console.aliyun.com/
+2. Navigate to API Key management
+3. Check key status (Active/Revoked/Expired)
+4. If expired/revoked: Create new API key
+5. Update environment variable: `export DASHSCOPE_API_KEY=sk-xxxxx`
+6. Re-run scoring — should now succeed
+
+**Workaround**: Package automatically falls back to rule-only mode (v0.6.4 behavior) when LLM API fails. All core scoring features remain functional.
+
+**Verification**:
+```bash
+python3 -c "from src.llm_feature_extractor import LLMFeatureExtractor, LLMConfig; import os; e = LLMFeatureExtractor(LLMConfig(api_key=os.environ['DASHSCOPE_API_KEY'])); print(e.extract('测试'))"
+```
+
+Expected: `LLMFeatures(...)` with features extracted
+If 401: Fallback mode activated, rule-only scoring used
+
 ## Roadmap
 
 ### v0.7.0 (Current — 2026-04 Target Release)

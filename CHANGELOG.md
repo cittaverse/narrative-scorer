@@ -56,6 +56,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Live LLM tests: Pending DASHSCOPE_API_KEY availability
 - Benchmark accuracy: 175/175 = 100% dimension accuracy (25 samples × 7 dimensions)
 
+### Known Issues (v0.7.0)
+- **DASHSCOPE_API_KEY Authentication (401 Error)**
+  - Some users report 401 authentication errors with DashScope API keys
+  - Root cause: API key may be expired, revoked, or incorrectly provisioned
+  - Workaround: Package falls back to rule-only mode (v0.6.4 behavior) when LLM API fails
+  - Resolution: Verify key status at https://dashscope.console.aliyun.com/ and rotate if needed
+  - Impact: LLM-enhanced features unavailable until key is valid; rule-only scoring still functional
+  - Tracking: Ongoing investigation (expected resolution: 2026-04-01)
+
 ---
 
 ## [0.6.4] - 2026-03-26
