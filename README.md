@@ -395,6 +395,8 @@ If you use this tool in your research, please cite:
 }
 ```
 
+$expansion_content
+
 ## License
 
 MIT License - see LICENSE file
