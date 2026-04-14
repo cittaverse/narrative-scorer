@@ -1,5 +1,9 @@
 # CittaVerse Narrative Scorer v0.7.0 🧠
 
+> Built by [CittaVerse](https://www.cittaverse.com) · See also: [core](https://github.com/cittaverse/core) · [pipeline](https://github.com/cittaverse/pipeline) · [awesome-digital-therapy](https://github.com/cittaverse/awesome-digital-therapy)
+>
+> If this is useful, please star — it helps others discover it.
+
 [![CI](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml/badge.svg)](https://github.com/cittaverse/narrative-scorer/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/cittaverse-narrative-scorer.svg)](https://pypi.org/project/cittaverse-narrative-scorer/)
 [![arXiv](https://img.shields.io/badge/arXiv-pending-orange)](https://arxiv.org/)
